@@ -12,158 +12,34 @@
   <!-- Librería para html2pdf -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #f0f8ff, #d0e7f9);
-      margin: 20px;
-      text-align: center;
-    }
-    h1, h2 {
-      color: #333;
-    }
-    /* Estilos para el Login */
-    #loginContainer {
-      margin: 0 auto;
-      max-width: 400px;
-      background: #fff;
-      padding: 20px;
-      border-radius: 5px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    input {
-      width: 80%;
-      padding: 10px;
-      margin: 10px;
-      font-size: 14px;
-    }
-    button {
-      margin-top: 20px;
-      padding: 10px 20px;
-      background-color: #28a745;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-    button:hover {
-      background-color: #218838;
-    }
-    /* Botón de Logout */
-    .logout-btn {
-      background-color: #dc3545;
-      margin-top: 10px;
-    }
-    .logout-btn:hover {
-      background-color: #c82333;
-    }
-    /* Botones adicionales para estudiantes */
-    .student-btn {
-      margin: 5px;
-      padding: 8px 16px;
-      background-color: #007bff;
-    }
-    .student-btn:hover {
-      background-color: #0069d9;
-    }
-    /* Ocultar contenedores por defecto */
-    #studentContainer, #teacherContainer {
-      display: none;
-    }
-    /* Tabla de Créditos */
-    #creditsTable {
-      margin: 20px auto;
-      border-collapse: collapse;
-      width: 90%;
-      background-color: #fff;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    #creditsTable th, #creditsTable td {
-      border: 1px solid #ccc;
-      padding: 8px;
-      text-align: center;
-      white-space: normal;
-      word-wrap: break-word;
-    }
-    #creditsTable th {
-      background-color: #007bff;
-      color: #fff;
-    }
-    /* Horario interactivo (para estudiantes) */
-    #scheduleContainer {
-      margin: auto;
-      width: 90%;
-      max-width: 100%;
-    }
-    #scheduleTable {
-      margin: 20px auto;
-      border-collapse: collapse;
-      width: 100%;
-      background-color: #fff;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    #scheduleTable th, #scheduleTable td {
-      border: 1px solid #ccc;
-      padding: 10px;
-      text-align: center;
-      white-space: normal;
-      word-wrap: break-word;
-    }
-    #scheduleTable th {
-      background-color: #4CAF50;
-      color: #fff;
-    }
-    select {
-      width: 100%;
-      padding: 5px;
-      border-radius: 4px;
-      border: 1px solid #ccc;
-      white-space: normal;
-    }
-    option {
-      white-space: normal;
-    }
-    /* Resumen del Horario (tabla 6x8) */
-    #summaryContainer {
-      margin: 20px auto;
-      width: 90%;
-      max-width: 100%;
-    }
-    #summaryTable {
-      margin: 0 auto;
-      border-collapse: collapse;
-      width: 100%;
-      background-color: #fff;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    #summaryTable th, #summaryTable td {
-      border: 1px solid #ccc;
-      padding: 10px;
-      text-align: center;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-    }
-    #summaryTable th {
-      background-color: #8e44ad;
-      color: #fff;
-    }
-    /* Teacher Dashboard */
-    #reportContainer {
-      margin: 20px auto;
-      width: 90%;
-      background-color: #fff;
-      padding: 10px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    #reportContainer table {
-      margin: 20px auto;
-      border-collapse: collapse;
-      width: 100%;
-    }
-    #reportContainer th, #reportContainer td {
-      border: 1px solid #ccc;
-      padding: 10px;
-    }
+    /* (Los estilos permanecen iguales que en la versión anterior) */
+    body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #f0f8ff, #d0e7f9); margin: 20px; text-align: center; }
+    h1, h2 { color: #333; }
+    #loginContainer { margin: 0 auto; max-width: 400px; background: #fff; padding: 20px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    input { width: 80%; padding: 10px; margin: 10px; font-size: 14px; }
+    button { margin-top: 20px; padding: 10px 20px; background-color: #28a745; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+    button:hover { background-color: #218838; }
+    .logout-btn { background-color: #dc3545; margin-top: 10px; }
+    .logout-btn:hover { background-color: #c82333; }
+    .student-btn { margin: 5px; padding: 8px 16px; background-color: #007bff; }
+    .student-btn:hover { background-color: #0069d9; }
+    #studentContainer, #teacherContainer { display: none; }
+    #creditsTable { margin: 20px auto; border-collapse: collapse; width: 90%; background-color: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    #creditsTable th, #creditsTable td { border: 1px solid #ccc; padding: 8px; text-align: center; white-space: normal; word-wrap: break-word; }
+    #creditsTable th { background-color: #007bff; color: #fff; }
+    #scheduleContainer { margin: auto; width: 90%; max-width: 100%; }
+    #scheduleTable { margin: 20px auto; border-collapse: collapse; width: 100%; background-color: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    #scheduleTable th, #scheduleTable td { border: 1px solid #ccc; padding: 10px; text-align: center; white-space: normal; word-wrap: break-word; }
+    #scheduleTable th { background-color: #4CAF50; color: #fff; }
+    select { width: 100%; padding: 5px; border-radius: 4px; border: 1px solid #ccc; white-space: normal; }
+    option { white-space: normal; }
+    #summaryContainer { margin: 20px auto; width: 90%; max-width: 100%; }
+    #summaryTable { margin: 0 auto; border-collapse: collapse; width: 100%; background-color: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    #summaryTable th, #summaryTable td { border: 1px solid #ccc; padding: 10px; text-align: center; white-space: pre-wrap; word-wrap: break-word; }
+    #summaryTable th { background-color: #8e44ad; color: #fff; }
+    #reportContainer { margin: 20px auto; width: 90%; background-color: #fff; padding: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    #reportContainer table { margin: 20px auto; border-collapse: collapse; width: 100%; }
+    #reportContainer th, #reportContainer td { border: 1px solid #ccc; padding: 10px; }
   </style>
   <script>
     // Nueva configuración de Firebase
@@ -372,7 +248,6 @@
       { fullName: "Claudia Sedan", username: "csedan", password: "CsL7z39" }
     ];
 
-    // Mapeo de asignaturas y sus responsables
     const teacherSubjects = {
       "TechnoScience 1": ["Juan Ramirez"],
       "TechnoScience 2": ["Nicolas Lopez"],
@@ -394,8 +269,6 @@
       e.preventDefault();
       const uname = document.getElementById('username').value.trim();
       const pwd = document.getElementById('password').value.trim();
-
-      // Verificar docentes
       let user = teachers.find(t => t.username === uname && t.password === pwd);
       if(user) {
         currentUser = user;
@@ -404,7 +277,6 @@
         document.getElementById('teacherContainer').style.display = "block";
         return;
       }
-      // Verificar estudiantes
       user = students.find(s => s.username === uname && s.password === pwd);
       if(user) {
         currentUser = user;
@@ -459,7 +331,6 @@
     function updateSummaryTable() {
       const summaryTable = document.getElementById('summaryTable');
       summaryTable.innerHTML = "";
-      // Encabezado: 6 columnas ("Hour", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday")
       const header = document.createElement('tr');
       const thHour = document.createElement('th');
       thHour.textContent = "Hour";
@@ -470,7 +341,6 @@
         header.appendChild(th);
       });
       summaryTable.appendChild(header);
-      // 7 filas para cada hora
       hours.forEach((hour, idx) => {
         const tr = document.createElement('tr');
         const tdHour = document.createElement('td');
@@ -483,7 +353,6 @@
             const cell = scheduleRow.children[dIndex+1];
             if(cell) {
               const select = cell.querySelector('select');
-              // Usar <br> para separar nombres por renglones
               td.innerHTML = select ? select.value.replace(/,\s*/g, "<br>") : "";
             }
           }
@@ -617,6 +486,10 @@
 
     /***************** GUARDAR HORARIO (ESTUDIANTE) *****************/
     document.getElementById('saveScheduleBtn').addEventListener('click', function() {
+      if(!currentUser || !currentUser.username) {
+        alert("No hay un usuario autenticado.");
+        return;
+      }
       const scheduleData = {};
       const rows = document.querySelectorAll('#scheduleTable tbody tr');
       rows.forEach((row, i) => {
@@ -630,7 +503,6 @@
           }
         });
       });
-      // Guardar en Firestore en la colección "studentSchedules"
       db.collection("studentSchedules").doc(currentUser.username).set({
         fullName: currentUser.fullName,
         schedule: scheduleData
@@ -765,7 +637,6 @@
           tr.appendChild(tdHour);
           days.forEach(day => {
             const td = document.createElement('td');
-            // Separar los nombres por renglones usando <br>
             td.innerHTML = reportData[hour][day].join("<br>");
             tr.appendChild(td);
           });
