@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Horario y Reportes - Sistema Académico</title>
+  <!-- Scripts de Firebase (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <!-- Librería para html2canvas -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- Librería para html2pdf -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #f0f8ff, #d0e7f9);
+      margin: 20px;
+      text-align: center;
+    }
+    h1, h2 {
+      color: #333;
+    }
+    /* Estilos para el Login */
+    #loginContainer {
+      margin: 0 auto;
+      max-width: 400px;
+      background: #fff;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    input {
+      width: 80%;
+      padding: 10px;
+      margin: 10px;
+      font-size: 14px;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #28a745;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background-color: #218838;
+    }
+    /* Botón de Logout */
+    .logout-btn {
+      background-color: #dc3545;
+      margin-top: 10px;
+    }
+    .logout-btn:hover {
+      background-color: #c82333;
+    }
+    /* Botones adicionales para estudiantes */
+    .student-btn {
+      margin: 5px;
+      padding: 8px 16px;
+      background-color: #007bff;
+    }
+    .student-btn:hover {
+      background-color: #0069d9;
+    }
+    /* Ocultar contenedores por defecto */
+    #studentContainer, #teacherContainer {
+      display: none;
+    }
+    /* Tabla de Créditos */
+    #creditsTable {
+      margin: 20px auto;
+      border-collapse: collapse;
+      width: 90%;
+      background-color: #fff;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    #creditsTable th, #creditsTable td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+      white-space: normal;
+      word-wrap: break-word;
+    }
+    #creditsTable th {
+      background-color: #007bff;
+      color: #fff;
+    }
+    /* Horario interactivo (para estudiantes) */
+    #scheduleContainer {
+      margin: auto;
+      width: 90%;
+      max-width: 100%;
+    }
+    #scheduleTable {
+      margin: 20px auto;
+      border-collapse: collapse;
+      width: 100%;
+      background-color: #fff;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    #scheduleTable th, #scheduleTable td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+      white-space: normal;
+      word-wrap: break-word;
+    }
+    #scheduleTable th {
+      background-color: #4CAF50;
+      color: #fff;
+    }
+    select {
+      width: 100%;
+      padding: 5px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      white-space: normal;
+    }
+    option {
+      white-space: normal;
+    }
+    /* Resumen del Horario (tabla 6x8) */
+    #summaryContainer {
+      margin: 20px auto;
+      width: 90%;
+      max-width: 100%;
+    }
+    #summaryTable {
+      margin: 0 auto;
+      border-collapse: collapse;
+      width: 100%;
+      background-color: #fff;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    #summaryTable th, #summaryTable td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    #summaryTable th {
+      background-color: #8e44ad;
+      color: #fff;
+    }
+    /* Teacher Dashboard */
+    #reportContainer {
+      margin: 20px auto;
+      width: 90%;
+      background-color: #fff;
+      padding: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    #reportContainer table {
+      margin: 20px auto;
+      border-collapse: collapse;
+      width: 100%;
+    }
+    #reportContainer th, #reportContainer td {
+      border: 1px solid #ccc;
+      padding: 10px;
+    }
+  </style>
+  <script>
+    // Nueva configuración de Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyCocoknBHVs6pAUr5TPiE93M0gYIR6oUoY",
+      authDomain: "cuw-grade3-a050b.firebaseapp.com",
+      projectId: "cuw-grade3-a050b",
+      storageBucket: "cuw-grade3-a050b.firebasestorage.app",
+      messagingSenderId: "235558993740",
+      appId: "1:235558993740:web:001c31edd886786390d9e9"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
+</head>
+<body>
+
+  <!-- LOGIN -->
+  <div id="loginContainer">
+    <h1>Iniciar Sesión</h1>
+    <form id="loginForm">
+      <input type="text" id="username" placeholder="Username" required>
+      <input type="password" id="password" placeholder="Password" required>
+      <button type="submit">Login</button>
+    </form>
+  </div>
+
+  <!-- INTERFAZ PARA ESTUDIANTES -->
+  <div id="studentContainer">
+    <h1>Bienvenido, <span id="studentName"></span></h1>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+    <!-- Tabla de Créditos -->
+    <table id="creditsTable">
+      <thead>
+        <tr>
+          <th>Credits</th>
+          <th>TechnoScience 1</th>
+          <th>TechnoScience 2</th>
+          <th>Maths</th>
+          <th>English</th>
+          <th>Social Studies</th>
+          <th>Spanish</th>
+          <th>Socio-emotional D</th>
+          <th>ERE</th>
+          <th>Physical education</th>
+          <th>Arts &amp; Music</th>
+          <th>Project</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Available credits</td>
+          <td id="avail-TechnoScience1">14</td>
+          <td id="avail-TechnoScience2">11</td>
+          <td id="avail-Maths">10</td>
+          <td id="avail-English">16</td>
+          <td id="avail-SocialStudies">10</td>
+          <td id="avail-Spanish">12</td>
+          <td id="avail-Socio-emotionalD">4</td>
+          <td id="avail-ERE">2</td>
+          <td id="avail-Physicaleducation">4</td>
+          <td id="avail-Arts&Music">4</td>
+          <td id="avail-Project">12</td>
+        </tr>
+        <tr>
+          <td>Used credits</td>
+          <td id="used-TechnoScience1">0</td>
+          <td id="used-TechnoScience2">0</td>
+          <td id="used-Maths">0</td>
+          <td id="used-English">0</td>
+          <td id="used-SocialStudies">0</td>
+          <td id="used-Spanish">0</td>
+          <td id="used-Socio-emotionalD">0</td>
+          <td id="used-ERE">0</td>
+          <td id="used-Physicaleducation">0</td>
+          <td id="used-Arts&Music">0</td>
+          <td id="used-Project">0</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Horario Interactivo -->
+    <div id="scheduleContainer">
+      <table id="scheduleTable">
+        <thead>
+          <tr>
+            <th>Hour</th>
+            <th>Monday</th>
+            <th>Tuesday</th>
+            <th>Wednesday</th>
+            <th>Thursday</th>
+            <th>Friday</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <!-- Se genera dinámicamente -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Resumen del Horario (tabla 6x8) -->
+    <div id="summaryContainer">
+      <h2>Resumen del Horario</h2>
+      <table id="summaryTable">
+        <!-- Se genera dinámicamente -->
+      </table>
+    </div>
+    <!-- Botones adicionales para el estudiante -->
+    <button id="saveScheduleBtn">Guardar Horario</button>
+    <button id="resetBtn" class="student-btn">Reset</button>
+    <button id="exportPngBtn" class="student-btn">Exportar en imagen PNG</button>
+    <button id="exportPdfBtn" class="student-btn">Exportar en PDF</button>
+  </div>
+
+  <!-- INTERFAZ PARA DOCENTES -->
+  <div id="teacherContainer">
+    <h1>Teacher Dashboard</h1>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+    <button id="generateReportBtn">Generar Reporte</button>
+    <div id="reportContainer">
+      <!-- Reporte se genera aquí -->
+    </div>
+    <button id="exportReportBtn">Exportar Reporte como CSV</button>
+  </div>
+
+  <script>
+    /***************** Datos de Usuarios *****************/
+    const students = [
+      { fullName: "ARBELAEZ MEJIA JULIAN ANDRES", username: "jarbelaez", password: "JaM4x27" },
+      { fullName: "BARRERA GUZMAN MEITAL", username: "mbarrera", password: "BgM9y61" },
+      { fullName: "BUSTILLO DUQUE VALERIA", username: "vbustillo", password: "BdV3z42" },
+      { fullName: "CASTRO GAITAN ELENA", username: "ecastro", password: "CgE5p29" },
+      { fullName: "CAVIEDES GUZMAN NIKOLAS", username: "ncaviedes", password: "CgN6q85" },
+      { fullName: "CHARRY PAEZ MARIANGEL", username: "mcharry", password: "CpM2r48" },
+      { fullName: "GOMEZ RENGIFO MARIA JOSE", username: "mgomez", password: "GrM1s23" },
+      { fullName: "GOMEZ SOTOMONTE ELISA", username: "egomez", password: "GsE3t47" },
+      { fullName: "GUTIERREZ CEDEÑO JOSE ANDRES", username: "jgutierrez", password: "GcJ9u54" },
+      { fullName: "LA ROTTA GUTIERREZ EMILIANO", username: "elarotta", password: "LgE4v82" },
+      { fullName: "LONDOÑO MENDEZ JUAN MARTIN", username: "jlondono", password: "LmJ7w91" },
+      { fullName: "LOSADA BRAVO SANTIAGO", username: "slosada", password: "LbS6x84" },
+      { fullName: "MARQUEZ DURAN DANIEL", username: "dmarquez", password: "MdD1y46" },
+      { fullName: "MENDEZ PEREZ VIRGINIA", username: "vmendez", password: "MpV6z23" },
+      { fullName: "MILLAN ESCOBAR ANA LUCIA", username: "amillan", password: "MeA5p98" },
+      { fullName: "MONJE PEREA ANGEL NATHAN", username: "amonje", password: "MpA8q20" },
+      { fullName: "OCHOA OCAMPO MARTINA", username: "mochoa", password: "OoM4r37" },
+      { fullName: "OSORIO GUTIERREZ MARTINA", username: "mosorio", password: "OgM2s54" },
+      { fullName: "PEREZ FLOREZ SOFIA SALOME", username: "sperez", password: "PfS3t45" },
+      { fullName: "PINZON VILLEGAS SAMUEL ANDRES", username: "spinzon", password: "PvS6u38" },
+      { fullName: "PRIAS OROZCO DAVID", username: "dprias", password: "PoD5v23" },
+      { fullName: "RANGEL RIVERO AMELIA", username: "arangel", password: "RrA8w36" },
+      { fullName: "REYES RUIZ JUANA", username: "jreyes", password: "RrJ2x75" },
+      { fullName: "ROA BARRIOS TOMAS", username: "troa", password: "RbT6y42" },
+      { fullName: "SILVA ZULETA JERONIMO", username: "jsilva", password: "SzJ4v81" },
+      { fullName: "SUAREZ ZUÑIGA JUAN MARTIN", username: "jsuarez", password: "SzJ5p47" },
+      { fullName: "TORRES GALVIS NOAH", username: "ntorres", password: "TgN9q45" },
+      { fullName: "URWIN REAL DANIELA", username: "durwin", password: "UrD3r57" },
+      { fullName: "VESGA MORALES ANA MARIA", username: "avesga", password: "VmA7s90" },
+      { fullName: "ZULUAGA GARCÍA ALEJANDRO", username: "azuluaga", password: "ZgA5t76" },
+      // Nuevos estudiantes:
+      { fullName: "ACOSTA MACHADO MARIANA", username: "amachado", password: "AmX4y21" },
+      { fullName: "ADAIME CASTAÑEDA GABRIELA", username: "acastaneda", password: "AcW7p38" },
+      { fullName: "ALARCON TRIANA MARIANA", username: "atriana", password: "AtV5t94" },
+      { fullName: "ALVARADO CARDOZO MARIA ANTONIA", username: "acardozoma", password: "AcU2y57" },
+      { fullName: "ARANA MONTOYA SAMUEL", username: "amontoya", password: "AmT8z26" },
+      { fullName: "ARBELAEZ LOZANO SUSANA", username: "alozano", password: "AlS6p83" },
+      { fullName: "ARBOLEDA ENCISO SIMON", username: "aenciso", password: "AeR4q31" },
+      { fullName: "CARO LUJAN JUANITA", username: "clujan", password: "ClP9w42" },
+      { fullName: "CASTRO RODRIGUEZ MATEO", username: "crodriguezm", password: "CrN3x75" },
+      { fullName: "CIFUENTES CARDENAS MONICA", username: "ccardenas", password: "CcM6y84" },
+      { fullName: "CORRAL VARGAS MARTIN ELIAB", username: "cvargasme", password: "CvL7z39" },
+      { fullName: "DUQUE LOPEZ CRISTOBAL", username: "dlopezc", password: "DlX4p21" },
+      { fullName: "GARZON CARREÑO JUANITA DE MARTIN", username: "gcarreñojm", password: "GcY9q62" },
+      { fullName: "GAVIRIA PEREZ SEBASTIAN", username: "gperezs", password: "GpZ3r45" },
+      { fullName: "GOMEZ MORA JACOBO", username: "gmoraj", password: "GmW7s38" },
+      { fullName: "GONZALEZ YEPES EMILIO", username: "gye", password: "GyV5t94" },
+      { fullName: "JARABA CAÑAS MARIA ANTONIA", username: "jcanasma", password: "JcU2y57" },
+      { fullName: "LEON ROJAS NICOLAS", username: "lrojasn", password: "LrT8z26" },
+      { fullName: "MARÍN CELIS SALVADOR", username: "mceliss", password: "McS6p83" },
+      { fullName: "MEDINA OCAMPO MARIA PAULA", username: "mocampomp", password: "MoR4q31" },
+      { fullName: "MOSOS ESPAÑA EVA MARIA", username: "mespañaem", password: "MeP9w42" },
+      { fullName: "NUÑEZ ERASO LAURA MARIA", username: "nerasolm", password: "NeN3x75" },
+      { fullName: "OLIVEROS URIBE JUAN MARTIN", username: "ouribejm", password: "OuM6y84" },
+      { fullName: "ORTIZ CARRILLO MATIAS", username: "ocarrillom", password: "OcL7z39" },
+      { fullName: "PARRA OLIVER", username: "poliver", password: "PoX4p21" },
+      { fullName: "PERDOMO GUARNIZO JUAN MARTIN", username: "pguarnizojm", password: "PgY9q62" },
+      { fullName: "RAMIREZ LUGO SANTIAGO", username: "rlugos", password: "RlZ3x45" },
+      { fullName: "RIVEROS TORRES EMILIO", username: "rtorrese", password: "RtW7s38" },
+      { fullName: "SANTOS GUTIERREZ ANARELLA CECILIA", username: "sgutierrezac", password: "SgV5t94" },
+      { fullName: "SANTOS TINOCO MARIA PAULA", username: "stinocomp", password: "StU2y57" },
+      { fullName: "EXAMPLE STUDENT SANBONI", username: "esanboni", password: "EsT8z26" }
+    ];
+
+    const teachers = [
+      { fullName: "Diana Toro", username: "dtoro", password: "DtX4p21" },
+      { fullName: "Marcela Garcia", username: "mgarcia", password: "MgY9q62" },
+      { fullName: "Oriadna Montelaegre", username: "omontelaegre", password: "OmZ3r45" },
+      { fullName: "Jhoan Reinoso", username: "jreinoso", password: "JrW7s38" },
+      { fullName: "Camila Paez", username: "cpaez", password: "CpV5t94" },
+      { fullName: "Caroline Alcala", username: "calcala", password: "CaU2y57" },
+      { fullName: "Laura Moreno", username: "lmoreno", password: "LmT8z26" },
+      { fullName: "Nataly Guayara", username: "nguayara", password: "NgS6p83" },
+      { fullName: "Jennifer Prieto", username: "jprieto", password: "JpR4q31" },
+      { fullName: "Juan Ramirez", username: "jramirez", password: "JrP9w42" },
+      { fullName: "Nicolas Lopez", username: "nlopez", password: "NlN3x75" },
+      { fullName: "Wendy Arias", username: "warias", password: "WaM6y84" },
+      { fullName: "Claudia Sedan", username: "csedan", password: "CsL7z39" }
+    ];
+
+    // Mapeo de asignaturas y sus responsables
+    const teacherSubjects = {
+      "TechnoScience 1": ["Juan Ramirez"],
+      "TechnoScience 2": ["Nicolas Lopez"],
+      "Maths": ["Nataly Guayara"],
+      "Project": ["Laura Moreno"],
+      "English": ["Caroline Alcala"],
+      "Spanish": ["Wendy Arias"],
+      "Social Studies": ["Jennifer Prieto"],
+      "Arts & Music": ["Diana Toro", "Marcela Garcia"],
+      "Physical education": ["Jhoan Reinoso", "Camila Paez"],
+      "Socio-emotional D": ["Oriadna Montelaegre"],
+      "ERE": ["Claudia Sedan"]
+    };
+
+    let currentUser = null, currentRole = null;
+
+    /***************** LOGIN *****************/
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const uname = document.getElementById('username').value.trim();
+      const pwd = document.getElementById('password').value.trim();
+
+      // Verificar docentes
+      let user = teachers.find(t => t.username === uname && t.password === pwd);
+      if(user) {
+        currentUser = user;
+        currentRole = "teacher";
+        document.getElementById('loginContainer').style.display = "none";
+        document.getElementById('teacherContainer').style.display = "block";
+        return;
+      }
+      // Verificar estudiantes
+      user = students.find(s => s.username === uname && s.password === pwd);
+      if(user) {
+        currentUser = user;
+        currentRole = "student";
+        document.getElementById('loginContainer').style.display = "none";
+        document.getElementById('studentContainer').style.display = "block";
+        document.getElementById('studentName').textContent = user.fullName;
+        loadStudentSchedule();
+        return;
+      }
+      alert("Credenciales incorrectas. Intenta de nuevo.");
+    });
+
+    /***************** HORARIO INTERACTIVO (ESTUDIANTE) *****************/
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+    const hours = ['Hour 1', 'Hour 2', 'Hour 3', 'Hour 4', 'Hour 5', 'Hour 6', 'Hour 7'];
+    function getSubjectName(optionText) {
+      let subject = optionText.split(":")[0].trim();
+      if(subject.toLowerCase() === "math") return "Maths";
+      if(subject.toLowerCase() === "physical education") return "Physical education";
+      return subject;
+    }
+    function recalcCredits() {
+      const creditMax = {
+        "TechnoScience 1": 14,
+        "TechnoScience 2": 11,
+        "Maths": 10,
+        "English": 16,
+        "Social Studies": 10,
+        "Spanish": 12,
+        "Socio-emotional D": 4,
+        "ERE": 2,
+        "Physical education": 4,
+        "Arts & Music": 4,
+        "Project": 12
+      };
+      let counts = {};
+      for(let subj in creditMax) counts[subj] = 0;
+      document.querySelectorAll('#scheduleTable select').forEach(select => {
+        const val = select.value;
+        if(val.trim() !== ""){
+          const subj = getSubjectName(val);
+          if(counts.hasOwnProperty(subj)) counts[subj]++;
+        }
+      });
+      for(let subj in creditMax) {
+        const idSafe = subj.replace(/\s+/g, '');
+        document.getElementById('used-' + idSafe).textContent = counts[subj];
+        document.getElementById('avail-' + idSafe).textContent = creditMax[subj] - counts[subj];
+      }
+    }
+    function updateSummaryTable() {
+      const summaryTable = document.getElementById('summaryTable');
+      summaryTable.innerHTML = "";
+      // Encabezado: 6 columnas ("Hour", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday")
+      const header = document.createElement('tr');
+      const thHour = document.createElement('th');
+      thHour.textContent = "Hour";
+      header.appendChild(thHour);
+      days.forEach(day => {
+        const th = document.createElement('th');
+        th.textContent = day;
+        header.appendChild(th);
+      });
+      summaryTable.appendChild(header);
+      // 7 filas para cada hora
+      hours.forEach((hour, idx) => {
+        const tr = document.createElement('tr');
+        const tdHour = document.createElement('td');
+        tdHour.textContent = hour;
+        tr.appendChild(tdHour);
+        days.forEach((day, dIndex) => {
+          const td = document.createElement('td');
+          const scheduleRow = document.querySelectorAll('#scheduleTable tbody tr')[idx];
+          if(scheduleRow) {
+            const cell = scheduleRow.children[dIndex+1];
+            if(cell) {
+              const select = cell.querySelector('select');
+              // Usar <br> para separar nombres por renglones
+              td.innerHTML = select ? select.value.replace(/,\s*/g, "<br>") : "";
+            }
+          }
+          tr.appendChild(td);
+        });
+        summaryTable.appendChild(tr);
+      });
+    }
+    function onSelectChange(event) {
+      const select = event.target;
+      const newVal = select.value;
+      const prevVal = select.getAttribute('data-prev') || "";
+      const creditMax = {
+        "TechnoScience 1": 14,
+        "TechnoScience 2": 11,
+        "Maths": 10,
+        "English": 16,
+        "Social Studies": 10,
+        "Spanish": 12,
+        "Socio-emotional D": 4,
+        "ERE": 2,
+        "Physical education": 4,
+        "Arts & Music": 4,
+        "Project": 12
+      };
+      let counts = {};
+      for(let subj in creditMax) counts[subj] = 0;
+      document.querySelectorAll('#scheduleTable select').forEach(s => {
+        if(s !== select) {
+          const val = s.value;
+          if(val.trim() !== ""){
+            const subj = getSubjectName(val);
+            if(counts.hasOwnProperty(subj)) counts[subj]++;
+          }
+        }
+      });
+      const subjNew = getSubjectName(newVal);
+      if(counts.hasOwnProperty(subjNew)) {
+        counts[subjNew]++;
+        if(counts[subjNew] > creditMax[subjNew]) {
+          alert('Se excedieron los créditos disponibles para ' + subjNew);
+          select.value = prevVal;
+          return;
+        }
+      }
+      select.setAttribute('data-prev', newVal);
+      recalcCredits();
+      updateSummaryTable();
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      const tableBody = document.getElementById('tableBody');
+      const scheduleData = {
+        'Monday': {
+          'Hour 1': "TechnoScience 1: Teacher Juan, TechnoScience 2: Teacher Nicolas, Math: Teacher Nataly, Project: Assigned teachers",
+          'Hour 2': "English: Teacher Caroline, Spanish: Teacher Wendy, Social Studies: Teacher Jennifer, Arts & Music: Teachers Diana & Marcela",
+          'Hour 3': "English: Teacher Caroline, Spanish: Teacher Wendy, Socio-emotional D: Teacher Oriadna, Project: Assigned teachers",
+          'Hour 4': "English: Teacher Caroline, Math: Teacher Nataly, Socio-emotional D: Teacher Oriadna, Arts & Music: Teachers Diana & Marcela, Project: Assigned teachers",
+          'Hour 5': "Physical Education: Teachers Jhoan & Camila, English: Teacher Caroline, Social Studies: Teacher Jennifer, Project: Assigned teachers, ERE: Teacher Claudia",
+          'Hour 6': "TechnoScience 1: Teacher Juan, English: Teacher Caroline, Social Studies: Teacher Jennifer, Project: Assigned teachers",
+          'Hour 7': "TechnoScience 1: Teacher Juan, English: Teacher Caroline, Social Studies: Teacher Jennifer"
+        },
+        'Tuesday': {
+          'Hour 1': "Math: Teacher Nataly, Spanish: Teacher Wendy, Social Studies: Teacher Jennifer",
+          'Hour 2': "Socio-emotional D: Teacher Oriadna, Spanish: Teacher Wendy, Social Studies: Teacher Jennifer, Project: Assigned teachers",
+          'Hour 3': "TechnoScience 1: Teacher Juan, TechnoScience 2: Teacher Nicolas, Math: Teacher Nataly, English: Teacher Caroline",
+          'Hour 4': "TechnoScience 1: Teacher Juan, TechnoScience 2: Teacher Nicolas, Math: Teacher Nataly, Spanish: Teacher Wendy, Project: Assigned teachers",
+          'Hour 5': "Math: Teacher Nataly, Spanish: Teacher Wendy, Social Studies: Teacher Jennifer",
+          'Hour 6': "Spanish: Teacher Wendy, English: Teacher Caroline, Social Studies: Teacher Jennifer",
+          'Hour 7': "TechnoScience 1: Teacher Juan, TechnoScience 2: Teacher Nicolas, Spanish: Teacher Wendy, Social Studies: Teacher Jennifer"
+        },
+        'Wednesday': {
+          'Hour 1': "TechnoScience 1: Teacher Juan, Math: Teacher Nataly, Spanish: Teacher Wendy, Social Studies: Teacher Jennifer",
+          'Hour 2': "TechnoScience 1: Teacher Juan, Math: Teacher Nataly, Spanish: Teacher Wendy, Social Studies: Teacher Jennifer",
+          'Hour 3': "TechnoScience 1: Teacher Juan, TechnoScience 2: Teacher Nicolas, Math: Teacher Nataly, Spanish: Teacher Wendy, Social Studies: Teacher Jennifer",
+          'Hour 4': "TechnoScience 1: Teacher Juan, English: Teacher Caroline, Project: Assigned teachers",
+          'Hour 5': "TechnoScience 1: Teacher Juan, Math: Teacher Nataly, English: Teacher Caroline, Social Studies: Teacher Jennifer",
+          'Hour 6': "TechnoScience 1: Teacher Juan, TechnoScience 2: Teacher Nicolas, Math: Teacher Nataly, Spanish: Teacher Wendy, Social Studies: Teacher Jennifer",
+          'Hour 7': "TechnoScience 1: Teacher Juan, TechnoScience 2: Teacher Nicolas, Math: Teacher Nataly, English: Teacher Caroline, Social Studies: Teacher Jennifer"
+        },
+        'Thursday': {
+          'Hour 1': "Physical Education: Teachers Jhoan & Camila, Spanish: Teacher Wendy, Social Studies: Teacher Jennifer",
+          'Hour 2': "Project: Assigned teachers, Spanish: Teacher Wendy, Social Studies: Teacher Jennifer, ERE: Teacher Claudia",
+          'Hour 3': "TechnoScience 1: Teacher Juan, Math: Teacher Nataly, English: Teacher Caroline",
+          'Hour 4': "Socio-emotional D: Teacher Oriadna, TechnoScience 1: Teacher Juan, English: Teacher Caroline, Project: Assigned teachers",
+          'Hour 5': "Arts & Music: Teachers Diana & Marcela, English: Teacher Caroline, Social Studies: Teacher Jennifer",
+          'Hour 6': "Spanish: Teacher Wendy, Social Studies: Teacher Jennifer, TechnoScience 2: Teacher Nicolas, Project: Assigned teachers",
+          'Hour 7': "TechnoScience 1: Teacher Juan, TechnoScience 2: Teacher Nicolas, Math: Teacher Nataly, Physical Education: Teachers Jhoan & Camila"
+        },
+        'Friday': {
+          'Hour 1': "TechnoScience 1: Teacher Juan, Math: Teacher Nataly, Social Studies: Teacher Jennifer",
+          'Hour 2': "Physical Education: Teachers Jhoan & Camila, TechnoScience 1: Teacher Juan, Math: Teacher Nataly",
+          'Hour 3': "TechnoScience 1: Teacher Juan, TechnoScience 2: Teacher Nicolas, Spanish: Teacher Wendy, Project: Assigned teachers",
+          'Hour 4': "Arts & Music: Teachers Diana & Marcela, Math: Teacher Nataly, Spanish: Teacher Wendy, English: Teacher Caroline",
+          'Hour 5': "Physical Education: Teachers Jhoan & Camila, Math: Teacher Nataly, Spanish: Teacher Wendy, English: Teacher Caroline",
+          'Hour 6': "TechnoScience 1: Teacher Juan, TechnoScience 2: Teacher Nicolas, Spanish: Teacher Wendy, Social Studies: Teacher Jennifer",
+          'Hour 7': "" // Sin clase en Friday Hour 7
+        }
+      };
+      hours.forEach(hour => {
+        const tr = document.createElement('tr');
+        const th = document.createElement('th');
+        th.textContent = hour;
+        tr.appendChild(th);
+        days.forEach(day => {
+          const td = document.createElement('td');
+          const select = document.createElement('select');
+          select.style.width = '100%';
+          const placeholder = document.createElement('option');
+          placeholder.value = "";
+          placeholder.textContent = "Seleccionar";
+          select.appendChild(placeholder);
+          const optionsStr = scheduleData[day][hour] || "";
+          const options = optionsStr ? optionsStr.split(", ") : [];
+          options.forEach(opt => {
+            const option = document.createElement('option');
+            option.style.whiteSpace = 'normal';
+            option.textContent = opt;
+            select.appendChild(option);
+          });
+          select.value = "";
+          select.setAttribute('data-prev', "");
+          select.addEventListener('change', onSelectChange);
+          td.appendChild(select);
+          tr.appendChild(td);
+        });
+        tableBody.appendChild(tr);
+      });
+      recalcCredits();
+      updateSummaryTable();
+    });
+
+    /***************** GUARDAR HORARIO (ESTUDIANTE) *****************/
+    document.getElementById('saveScheduleBtn').addEventListener('click', function() {
+      const scheduleData = {};
+      const rows = document.querySelectorAll('#scheduleTable tbody tr');
+      rows.forEach((row, i) => {
+        const hour = row.children[0].textContent;
+        scheduleData[hour] = {};
+        days.forEach((day, index) => {
+          const cell = row.children[index+1];
+          if(cell) {
+            const select = cell.querySelector('select');
+            scheduleData[hour][day] = select ? select.value : "";
+          }
+        });
+      });
+      // Guardar en Firestore en la colección "studentSchedules"
+      db.collection("studentSchedules").doc(currentUser.username).set({
+        fullName: currentUser.fullName,
+        schedule: scheduleData
+      }).then(() => {
+        alert("Horario guardado exitosamente.");
+        setTimeout(downloadImage, 1000);
+      }).catch(error => {
+        console.error("Error al guardar el horario:", error);
+        alert("Error al guardar el horario.");
+      });
+    });
+
+    /***************** RESET (ESTUDIANTE) *****************/
+    document.getElementById('resetBtn').addEventListener('click', function() {
+      document.querySelectorAll('#scheduleTable select').forEach(select => {
+        select.value = "";
+        select.setAttribute('data-prev', "");
+      });
+      recalcCredits();
+      updateSummaryTable();
+    });
+
+    /***************** EXPORTAR EN IMAGEN PNG (ESTUDIANTE) *****************/
+    document.getElementById('exportPngBtn').addEventListener('click', function() {
+      const element = document.getElementById('summaryContainer');
+      html2canvas(element, { scale: 2 }).then(canvas => {
+        const dataURL = canvas.toDataURL("image/png");
+        const link = document.createElement('a');
+        const fileName = currentUser && currentUser.fullName 
+          ? "Resumen del Horario - " + currentUser.fullName + ".png" 
+          : "Resumen_Horario.png";
+        link.href = dataURL;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }).catch(err => {
+        console.error("Error generando la imagen PNG:", err);
+      });
+    });
+
+    /***************** EXPORTAR EN PDF (ESTUDIANTE) *****************/
+    document.getElementById('exportPdfBtn').addEventListener('click', function() {
+      const element = document.getElementById('summaryContainer');
+      const opt = {
+        margin: 1,
+        filename: currentUser && currentUser.fullName 
+                  ? "Resumen del Horario - " + currentUser.fullName + ".pdf"
+                  : "Resumen_Horario.pdf",
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'cm', format: 'letter', orientation: 'landscape' }
+      };
+      html2pdf().set(opt).from(element).save();
+    });
+
+    /***************** DESCARGAR IMAGEN DEL RESUMEN (USADO EN GUARDAR HORARIO) *****************/
+    function downloadImage() {
+      const summaryHeader = document.querySelector('#summaryContainer h2');
+      const originalHeader = summaryHeader.textContent;
+      if (currentUser && currentUser.fullName) {
+        summaryHeader.textContent = "Resumen del Horario - " + currentUser.fullName;
+      }
+      const element = document.getElementById('summaryContainer');
+      html2canvas(element, { scale: 2 }).then(canvas => {
+        const dataURL = canvas.toDataURL("image/jpeg", 0.98);
+        const link = document.createElement('a');
+        const fileName = currentUser && currentUser.fullName 
+          ? "Resumen del Horario - " + currentUser.fullName + ".jpg" 
+          : "Resumen_Horario.jpg";
+        link.href = dataURL;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        summaryHeader.textContent = originalHeader;
+      }).catch(err => {
+        console.error("Error generando la imagen:", err);
+      });
+    }
+
+    /***************** DASHBOARD DOCENTE *****************/
+    document.getElementById('generateReportBtn').addEventListener('click', function() {
+      const subjectsForTeacher = [];
+      for (const subj in teacherSubjects) {
+        if (teacherSubjects[subj].includes(currentUser.fullName)) {
+          subjectsForTeacher.push(subj);
+        }
+      }
+      const reportData = {};
+      hours.forEach(hour => {
+        reportData[hour] = {};
+        days.forEach(day => {
+          reportData[hour][day] = [];
+        });
+      });
+      db.collection("studentSchedules").get().then(querySnapshot => {
+        querySnapshot.forEach(doc => {
+          const data = doc.data();
+          const schedule = data.schedule;
+          for (const hour in schedule) {
+            for (const day in schedule[hour]) {
+              const selection = schedule[hour][day];
+              if (selection && selection.trim() !== "") {
+                const subj = getSubjectName(selection);
+                if (subjectsForTeacher.includes(subj)) {
+                  if (!reportData[hour][day].includes(data.fullName)) {
+                    reportData[hour][day].push(data.fullName);
+                  }
+                }
+              }
+            }
+          }
+        });
+        const reportContainer = document.getElementById('reportContainer');
+        reportContainer.innerHTML = "";
+        const table = document.createElement('table');
+        const header = document.createElement('tr');
+        const thHour = document.createElement('th');
+        thHour.textContent = "Hour";
+        header.appendChild(thHour);
+        days.forEach(day => {
+          const th = document.createElement('th');
+          th.textContent = day;
+          header.appendChild(th);
+        });
+        table.appendChild(header);
+        hours.forEach(hour => {
+          const tr = document.createElement('tr');
+          const tdHour = document.createElement('td');
+          tdHour.textContent = hour;
+          tr.appendChild(tdHour);
+          days.forEach(day => {
+            const td = document.createElement('td');
+            // Separar los nombres por renglones usando <br>
+            td.innerHTML = reportData[hour][day].join("<br>");
+            tr.appendChild(td);
+          });
+          table.appendChild(tr);
+        });
+        reportContainer.appendChild(table);
+      }).catch(error => {
+        console.error("Error obteniendo los horarios:", error);
+      });
+    });
+
+    document.getElementById('exportReportBtn').addEventListener('click', function() {
+      const table = document.querySelector('#reportContainer table');
+      let csv = "";
+      for (let i = 0; i < table.rows.length; i++){
+        let row = [];
+        for (let j = 0; j < table.rows[i].cells.length; j++){
+          row.push('"' + table.rows[i].cells[j].innerText + '"');
+        }
+        csv += row.join(",") + "\n";
+      }
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", "Teacher_Report.csv");
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+
+    /***************** BOTÓN DE LOGOUT *****************/
+    function logout() {
+      currentUser = null;
+      currentRole = null;
+      document.getElementById('loginContainer').style.display = "block";
+      document.getElementById('studentContainer').style.display = "none";
+      document.getElementById('teacherContainer').style.display = "none";
+      document.getElementById('loginForm').reset();
+    }
+
+    /***************** CARGAR HORARIO (ESTUDIANTE) *****************/
+    function loadStudentSchedule() {
+      db.collection("studentSchedules").doc(currentUser.username).get().then(doc => {
+        if(doc.exists) {
+          const savedSchedule = doc.data().schedule;
+          document.querySelectorAll('#scheduleTable tbody tr').forEach((row, i) => {
+            const hour = row.children[0].textContent;
+            if(savedSchedule[hour]) {
+              days.forEach((day, j) => {
+                const cell = row.children[j+1];
+                if(cell) {
+                  const select = cell.querySelector('select');
+                  if(select && savedSchedule[hour][day] !== undefined) {
+                    select.value = savedSchedule[hour][day];
+                    select.setAttribute('data-prev', savedSchedule[hour][day]);
+                  }
+                }
+              });
+            }
+          });
+          recalcCredits();
+          updateSummaryTable();
+        }
+      }).catch(error => {
+        console.error("Error cargando el horario:", error);
+      });
+    }
+  </script>
+</body>
+</html>
